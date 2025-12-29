@@ -4,6 +4,38 @@ import { createClient, getCurrentUser } from '@/lib/supabaseServer';
 import { ConfessionInsert, UnlockType, Gender } from '@/types/database';
 import { revalidatePath } from 'next/cache';
 
+const ALLOWED_IMAGE_HOSTS = [
+  'images.unsplash.com',
+  'unsplash.com',
+  'picsum.photos',
+  'i.pravatar.cc',
+  'randomuser.me',
+  'encrypted-tbn0.gstatic.com',
+];
+
+const FALLBACK_IMAGES = [
+  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=400&fit=crop',
+  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop',
+  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&h=400&fit=crop',
+];
+
+function sanitizeImageUrl(url?: string | null): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:') return null;
+    const host = parsed.hostname.toLowerCase();
+    const allowed = ALLOWED_IMAGE_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
+    return allowed ? parsed.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+function pickFallbackImage(): string {
+  return FALLBACK_IMAGES[Math.floor(Math.random() * FALLBACK_IMAGES.length)];
+}
+
 // Response type for actions
 interface ActionResponse<T = unknown> {
   success: boolean;
@@ -49,10 +81,12 @@ export async function createConfession(
       return { success: false, error: 'Tuổi phải từ 13 đến 120 / Age must be between 13 and 120' };
     }
 
+    const safeImageUrl = sanitizeImageUrl(imageUrl) || pickFallbackImage();
+
     const confessionData: ConfessionInsert = {
       author_id: user.id,
       content,
-      image_url: imageUrl || null,
+      image_url: safeImageUrl,
       is_anonymous: isAnonymous,
       gender,
       age,
@@ -541,40 +575,22 @@ export async function topUpCoins(amount: number): Promise<ActionResponse<{ newBa
       return { success: false, error: 'Not authenticated' };
     }
 
-    // Get current profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('coins')
-      .eq('id', user.id)
-      .single();
+    const { data, error } = await supabase.rpc('add_coins', {
+      p_user_id: user.id,
+      p_amount: amount,
+    });
 
-    if (profileError || !profile) {
-      return { success: false, error: 'Profile not found' };
-    }
-
-    const newBalance = profile.coins + amount;
-
-    // Update coins
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ coins: newBalance })
-      .eq('id', user.id);
-
-    if (updateError) {
-      console.error('Error updating coins:', updateError);
+    if (error) {
+      console.error('Error updating coins via add_coins:', error);
       return { success: false, error: 'Failed to top up' };
     }
 
-    // Record transaction
-    await supabase.from('transactions').insert({
-      user_id: user.id,
-      amount,
-      type: 'TOP_UP',
-      description: `Nạp ${amount} xu / Top up ${amount} coins`,
-      balance_after: newBalance,
-    });
+    const result = data as { success: boolean; new_balance?: number; error?: string } | null;
+    if (!result?.success || typeof result.new_balance !== 'number') {
+      return { success: false, error: result?.error || 'Failed to top up' };
+    }
 
-    return { success: true, data: { newBalance } };
+    return { success: true, data: { newBalance: result.new_balance } };
   } catch (error) {
     console.error('Error in topUpCoins:', error);
     return { success: false, error: 'Something went wrong' };

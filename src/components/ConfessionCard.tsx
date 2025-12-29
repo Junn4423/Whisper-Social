@@ -21,6 +21,29 @@ interface ConfessionCardProps {
   confession: Confession;
 }
 
+const ALLOWED_IMAGE_HOSTS = [
+  'images.unsplash.com',
+  'unsplash.com',
+  'picsum.photos',
+  'i.pravatar.cc',
+  'randomuser.me',
+  'encrypted-tbn0.gstatic.com',
+];
+
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=400&fit=crop';
+
+function sanitizeImageUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:') return FALLBACK_IMAGE;
+    const host = parsed.hostname.toLowerCase();
+    const allowed = ALLOWED_IMAGE_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
+    return allowed ? parsed.toString() : FALLBACK_IMAGE;
+  } catch {
+    return FALLBACK_IMAGE;
+  }
+}
+
 export default function ConfessionCard({ confession }: ConfessionCardProps) {
   const router = useRouter();
   const { 
@@ -37,6 +60,8 @@ export default function ConfessionCard({ confession }: ConfessionCardProps) {
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [photoUnlocked, setPhotoUnlocked] = useState(isPhotoUnlocked(confession.id));
   const chatUnlocked = isChatUnlocked(confession.id);
+
+  const imageSrc = sanitizeImageUrl(confession.imageUrl || FALLBACK_IMAGE);
 
   const handleUnlockPhoto = async () => {
     if (!user) {
@@ -132,7 +157,7 @@ export default function ConfessionCard({ confession }: ConfessionCardProps) {
           <div className="relative flex-shrink-0">
             <div className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 ${photoUnlocked ? 'border-neon-purple' : 'border-dark-200'} transition-all duration-500`}>
               <Image
-                src={confession.imageUrl}
+                src={imageSrc}
                 alt="Avatar"
                 fill
                 className={`object-cover transition-all duration-500 ${

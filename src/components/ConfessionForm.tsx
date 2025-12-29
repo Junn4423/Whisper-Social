@@ -39,38 +39,48 @@ export default function ConfessionForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     if (!text.trim()) return;
 
     if (!user) {
       router.push('/auth/login?redirect=/create');
       return;
     }
-    
-    setIsSubmitting(true);
-    
-    // Use default image if none provided
-    const finalImageUrl = imageUrl.trim() || defaultImages[Math.floor(Math.random() * defaultImages.length)];
-    
-    const result = await createConfession({
-      content: text.trim(),
-      imageUrl: finalImageUrl,
-      gender,
-      age,
-      isAnonymous,
-    });
 
-    if (result.success) {
-      await refreshConfessions();
-      setIsSubmitting(false);
-      setShowSuccess(true);
-      
-      // Redirect after showing success
-      setTimeout(() => {
-        router.push('/');
-      }, 1500);
-    } else {
-      setError(result.error || 'Failed to create confession');
+    setIsSubmitting(true);
+
+    try {
+      const finalImageUrl = imageUrl.trim() || defaultImages[Math.floor(Math.random() * defaultImages.length)];
+
+      const result = await createConfession({
+        content: text.trim(),
+        imageUrl: finalImageUrl,
+        gender,
+        age,
+        isAnonymous,
+      });
+
+      if (result.success) {
+        // Fire-and-forget refresh; don't block UX
+        refreshConfessions().catch((err) => {
+          console.error('Failed to refresh confessions:', err);
+        });
+
+        setShowSuccess(true);
+        setText('');
+        setImageUrl('');
+
+        // Redirect after showing success
+        setTimeout(() => {
+          router.push('/');
+        }, 1000);
+      } else {
+        setError(result.error || 'Failed to create confession');
+      }
+    } catch (err) {
+      console.error('Error submitting confession:', err);
+      setError('Có lỗi xảy ra, vui lòng thử lại / Something went wrong');
+    } finally {
       setIsSubmitting(false);
     }
   };

@@ -173,12 +173,12 @@ export const translations: Translations = {
 
   // Success Messages
   confessionPosted: {
-    vi: 'Confession đã được đăng thành công! 🎉',
-    en: 'Confession posted successfully! 🎉',
+    vi: 'Confession đã được đăng thành công!',
+    en: 'Confession posted successfully!',
   },
   coinsAdded: {
-    vi: 'Đã nạp xu thành công! 💰',
-    en: 'Coins added successfully! 💰',
+    vi: 'Đã nạp xu thành công!',
+    en: 'Coins added successfully!',
   },
 
   // Language Toggle

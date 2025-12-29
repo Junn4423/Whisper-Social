@@ -29,7 +29,7 @@ const coinPackages: CoinPackage[] = [
 ];
 
 export default function TopUpModal() {
-  const { showTopUpModal, setShowTopUpModal, updateCoins, language, user } = useApp();
+  const { showTopUpModal, setShowTopUpModal, updateCoins, refreshProfile, language, user } = useApp();
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
 
   if (!showTopUpModal) return null;
@@ -49,6 +49,7 @@ export default function TopUpModal() {
     
     if (result.success && result.data) {
       updateCoins(result.data.newBalance);
+      refreshProfile().catch((err) => console.error('Failed to refresh profile after top-up:', err));
       setShowTopUpModal(false);
       // Show success notification
     }

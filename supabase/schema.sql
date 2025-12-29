@@ -448,6 +448,41 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Function to atomically add coins (top-up)
+CREATE OR REPLACE FUNCTION add_coins(
+  p_user_id UUID,
+  p_amount INTEGER
+)
+RETURNS JSONB AS $$
+DECLARE
+  new_balance INTEGER;
+BEGIN
+  IF p_amount IS NULL OR p_amount <= 0 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Invalid amount');
+  END IF;
+
+  UPDATE profiles
+  SET coins = coins + p_amount
+  WHERE id = p_user_id
+  RETURNING coins INTO new_balance;
+
+  IF new_balance IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'User not found');
+  END IF;
+
+  INSERT INTO transactions (user_id, amount, type, description, balance_after)
+  VALUES (
+    p_user_id,
+    p_amount,
+    'TOP_UP',
+    'Nạp xu / Top up coins',
+    new_balance
+  );
+
+  RETURN jsonb_build_object('success', true, 'new_balance', new_balance);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Function to check if user has unlocked content
 CREATE OR REPLACE FUNCTION has_unlocked(
   p_user_id UUID,

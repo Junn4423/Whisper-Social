@@ -250,6 +250,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          prompt: 'select_account',
+        },
       },
     });
     
@@ -273,6 +276,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // INITIALIZATION & SUBSCRIPTIONS
   // =============================================
 
+  const syncProfileFromUser = useCallback(async (u: User) => {
+    if (!supabase || !u) return;
+
+    const avatarUrl = (u.user_metadata as Record<string, any>)?.avatar_url
+      || (u.user_metadata as Record<string, any>)?.picture
+      || null;
+
+    const { data: existingProfile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', u.id)
+      .single();
+
+    if (error) {
+      // If not found, insert new profile with email as username
+      await supabase.from('profiles').upsert({
+        id: u.id,
+        username: u.email || `user_${u.id}`,
+        avatar_url: avatarUrl,
+      });
+      return;
+    }
+
+    const updates: Partial<Profile> = {};
+    if (u.email && existingProfile?.username !== u.email) {
+      updates.username = u.email;
+    }
+    if (avatarUrl && !existingProfile?.avatar_url) {
+      updates.avatar_url = avatarUrl;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await supabase.from('profiles').update(updates).eq('id', u.id);
+    }
+  }, []);
+
   // Initialize auth
   useEffect(() => {
     if (!supabase) {
@@ -294,6 +333,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const profileData = await fetchProfile(initialSession.user.id);
         if (profileData) {
           setProfile(profileData as Profile);
+          await syncProfileFromUser(initialSession.user);
         }
       }
       
@@ -313,6 +353,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           if (profileData) {
             setProfile(profileData as Profile);
           }
+          await syncProfileFromUser(newSession.user);
         } else {
           setProfile(null);
         }
