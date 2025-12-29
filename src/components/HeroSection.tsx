@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useApp } from '@/context/AppContext';
+import { useApp } from '@/context/SupabaseAppContext';
 import { t } from '@/lib/translations';
 import { 
   Sparkles, 

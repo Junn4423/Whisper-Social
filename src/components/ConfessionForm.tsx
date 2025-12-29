@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useApp } from '@/context/AppContext';
+import { useApp } from '@/context/SupabaseAppContext';
+import { createConfession } from '@/actions/confessionActions';
 import { t } from '@/lib/translations';
 import { 
   PenSquare, 
@@ -17,7 +18,7 @@ import {
 
 export default function ConfessionForm() {
   const router = useRouter();
-  const { addConfession, language } = useApp();
+  const { user, language, refreshConfessions } = useApp();
   
   const [text, setText] = useState('');
   const [imageUrl, setImageUrl] = useState('');
@@ -33,34 +34,45 @@ export default function ConfessionForm() {
     'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&h=400&fit=crop',
   ];
 
+  const [error, setError] = useState('');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     
     if (!text.trim()) return;
+
+    if (!user) {
+      router.push('/auth/login?redirect=/create');
+      return;
+    }
     
     setIsSubmitting(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Use default image if none provided
     const finalImageUrl = imageUrl.trim() || defaultImages[Math.floor(Math.random() * defaultImages.length)];
     
-    addConfession({
-      text: text.trim(),
+    const result = await createConfession({
+      content: text.trim(),
       imageUrl: finalImageUrl,
       gender,
       age,
       isAnonymous,
     });
-    
-    setIsSubmitting(false);
-    setShowSuccess(true);
-    
-    // Redirect after showing success
-    setTimeout(() => {
-      router.push('/');
-    }, 1500);
+
+    if (result.success) {
+      await refreshConfessions();
+      setIsSubmitting(false);
+      setShowSuccess(true);
+      
+      // Redirect after showing success
+      setTimeout(() => {
+        router.push('/');
+      }, 1500);
+    } else {
+      setError(result.error || 'Failed to create confession');
+      setIsSubmitting(false);
+    }
   };
 
   if (showSuccess) {
@@ -186,6 +198,13 @@ export default function ConfessionForm() {
             />
           </div>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
 
         {/* Anonymous Toggle */}
         <div className="flex items-center justify-between p-4 rounded-xl bg-dark-100/50 border border-dark-200">

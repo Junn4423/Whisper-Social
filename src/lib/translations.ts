@@ -194,6 +194,124 @@ export const translations: Translations = {
     vi: 'English',
     en: 'English',
   },
+
+  // Auth
+  welcomeBack: {
+    vi: 'Chào mừng trở lại',
+    en: 'Welcome Back',
+  },
+  loginToContinue: {
+    vi: 'Đăng nhập để tiếp tục',
+    en: 'Login to continue',
+  },
+  password: {
+    vi: 'Mật khẩu',
+    en: 'Password',
+  },
+  forgotPassword: {
+    vi: 'Quên mật khẩu?',
+    en: 'Forgot password?',
+  },
+  login: {
+    vi: 'Đăng nhập',
+    en: 'Login',
+  },
+  loading: {
+    vi: 'Đang xử lý...',
+    en: 'Loading...',
+  },
+  or: {
+    vi: 'hoặc',
+    en: 'or',
+  },
+  continueWithGoogle: {
+    vi: 'Tiếp tục với Google',
+    en: 'Continue with Google',
+  },
+  noAccount: {
+    vi: 'Chưa có tài khoản?',
+    en: "Don't have an account?",
+  },
+  signUp: {
+    vi: 'Đăng ký',
+    en: 'Sign Up',
+  },
+  createAccount: {
+    vi: 'Tạo tài khoản',
+    en: 'Create Account',
+  },
+  joinCommunity: {
+    vi: 'Tham gia cộng đồng ẩn danh',
+    en: 'Join the anonymous community',
+  },
+  confirmPassword: {
+    vi: 'Xác nhận mật khẩu',
+    en: 'Confirm Password',
+  },
+  minPassword: {
+    vi: 'Mật khẩu ít nhất 6 ký tự',
+    en: 'Password must be at least 6 characters',
+  },
+  passwordMismatch: {
+    vi: 'Mật khẩu không khớp',
+    en: 'Passwords do not match',
+  },
+  passwordTooShort: {
+    vi: 'Mật khẩu phải có ít nhất 6 ký tự',
+    en: 'Password must be at least 6 characters',
+  },
+  haveAccount: {
+    vi: 'Đã có tài khoản?',
+    en: 'Already have an account?',
+  },
+  checkEmail: {
+    vi: 'Kiểm tra email của bạn',
+    en: 'Check your email',
+  },
+  confirmationSent: {
+    vi: 'Chúng tôi đã gửi link xác nhận đến email của bạn.',
+    en: 'We sent a confirmation link to your email.',
+  },
+  backToLogin: {
+    vi: 'Quay lại đăng nhập',
+    en: 'Back to Login',
+  },
+  signOut: {
+    vi: 'Đăng xuất',
+    en: 'Sign Out',
+  },
+  profile: {
+    vi: 'Hồ sơ',
+    en: 'Profile',
+  },
+  myConfessions: {
+    vi: 'Confession của tôi',
+    en: 'My Confessions',
+  },
+  transactions: {
+    vi: 'Lịch sử giao dịch',
+    en: 'Transaction History',
+  },
+  online: {
+    vi: 'Trực tuyến',
+    en: 'Online',
+  },
+  offline: {
+    vi: 'Ngoại tuyến',
+    en: 'Offline',
+  },
+  typing: {
+    vi: 'Đang nhập...',
+    en: 'Typing...',
+  },
+  loginRequired: {
+    vi: 'Bạn cần đăng nhập',
+    en: 'Login required',
+  },
+  loginToUnlock: {
+    vi: 'Đăng nhập để mở khóa',
+    en: 'Login to unlock',
+  },
 };
 
 export const t = (key: string, lang: 'vi' | 'en'): string => {

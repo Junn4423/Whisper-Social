@@ -6,4 +6,5 @@ export { default as ConfessionCard } from './ConfessionCard';
 export { default as ConfessionFeed } from './ConfessionFeed';
 export { default as ConfessionForm } from './ConfessionForm';
 export { default as ChatInterface } from './ChatInterface';
+export { default as RealtimeChatInterface } from './RealtimeChatInterface';
 export { default as TopUpModal } from './TopUpModal';

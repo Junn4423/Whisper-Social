@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
-import { useApp } from '@/context/AppContext';
+import React, { useState } from 'react';
+import { useApp } from '@/context/SupabaseAppContext';
+import { topUpCoins } from '@/actions/confessionActions';
 import { t } from '@/lib/translations';
 import { 
   X, 
@@ -28,17 +29,31 @@ const coinPackages: CoinPackage[] = [
 ];
 
 export default function TopUpModal() {
-  const { showTopUpModal, setShowTopUpModal, updateCoins, language } = useApp();
+  const { showTopUpModal, setShowTopUpModal, updateCoins, language, user } = useApp();
+  const [isProcessing, setIsProcessing] = useState<string | null>(null);
 
   if (!showTopUpModal) return null;
 
-  const handlePurchase = (coins: number) => {
-    // Mock purchase - just add coins
-    updateCoins(coins);
-    setShowTopUpModal(false);
+  const handlePurchase = async (packageId: string, coins: number) => {
+    if (!user) {
+      setShowTopUpModal(false);
+      // Would redirect to login
+      return;
+    }
+
+    setIsProcessing(packageId);
     
-    // Show success feedback
-    alert(t('coinsAdded', language));
+    // In production, this would integrate with a payment gateway
+    // For now, we simulate adding coins
+    const result = await topUpCoins(coins);
+    
+    if (result.success && result.data) {
+      updateCoins(result.data.newBalance);
+      setShowTopUpModal(false);
+      // Show success notification
+    }
+    
+    setIsProcessing(null);
   };
 
   const formatPrice = (price: number) => {
@@ -92,8 +107,9 @@ export default function TopUpModal() {
           {coinPackages.map((pkg) => (
             <button
               key={pkg.id}
-              onClick={() => handlePurchase(pkg.coins)}
-              className={`relative w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
+              onClick={() => handlePurchase(pkg.id, pkg.coins)}
+              disabled={isProcessing !== null}
+              className={`relative w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
                 pkg.popular 
                   ? 'bg-gradient-to-r from-neon-purple/20 to-neon-pink/20 border-neon-purple hover:shadow-neon' 
                   : pkg.bestValue

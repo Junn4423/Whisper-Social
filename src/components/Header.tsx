@@ -2,21 +2,28 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useApp } from '@/context/AppContext';
+import { useApp } from '@/context/SupabaseAppContext';
 import { t } from '@/lib/translations';
 import { 
   Coins, 
   Home, 
   PenSquare, 
   Sparkles,
-  Globe
+  Globe,
+  LogIn,
+  LogOut,
+  User as UserIcon
 } from 'lucide-react';
 
 export default function Header() {
-  const { user, language, setLanguage } = useApp();
+  const { user, profile, coins, language, setLanguage, signOut } = useApp();
 
   const toggleLanguage = () => {
     setLanguage(language === 'vi' ? 'en' : 'vi');
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (
@@ -52,7 +59,7 @@ export default function Header() {
             </Link>
           </nav>
 
-          {/* Right Side - Coins & Language */}
+          {/* Right Side - Auth, Coins & Language */}
           <div className="flex items-center gap-3">
             {/* Language Toggle */}
             <button
@@ -66,14 +73,46 @@ export default function Header() {
               </span>
             </button>
 
-            {/* Coin Balance */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-gold-dark/30 to-gold/30 border border-gold/50 shadow-gold">
-              <Coins className="w-5 h-5 text-gold animate-pulse-slow" />
-              <span className="font-bold text-gold">{user.coins}</span>
-              <span className="text-xs text-gold-light hidden sm:inline">
-                {t('coins', language)}
-              </span>
-            </div>
+            {/* Coin Balance - Only show when logged in */}
+            {user && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-gold-dark/30 to-gold/30 border border-gold/50 shadow-gold">
+                <Coins className="w-5 h-5 text-gold animate-pulse-slow" />
+                <span className="font-bold text-gold">{coins}</span>
+                <span className="text-xs text-gold-light hidden sm:inline">
+                  {t('coins', language)}
+                </span>
+              </div>
+            )}
+
+            {/* Auth Buttons */}
+            {user ? (
+              <div className="flex items-center gap-2">
+                {/* Profile */}
+                <div className="hidden sm:flex items-center gap-2 px-2 py-1.5 rounded-lg bg-dark-100/50 border border-neon-purple/20">
+                  <UserIcon className="w-4 h-4 text-neon-purple" />
+                  <span className="text-xs text-gray-300 max-w-20 truncate">
+                    {profile?.username || 'User'}
+                  </span>
+                </div>
+                {/* Sign Out */}
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-dark-100/50 border border-red-500/20 hover:border-red-500/50 text-red-400 hover:text-red-300 transition-all"
+                  title={t('signOut', language)}
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="text-xs hidden sm:inline">{t('signOut', language)}</span>
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-neon text-white text-sm font-medium hover:shadow-neon transition-all"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>{t('login', language)}</span>
+              </Link>
+            )}
           </div>
         </div>
 

@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useApp } from '@/context/AppContext';
+import { useApp } from '@/context/SupabaseAppContext';
+import { unlockContent } from '@/actions/confessionActions';
 import { t } from '@/lib/translations';
 import { Confession } from '@/types';
 import { 
@@ -23,10 +24,13 @@ interface ConfessionCardProps {
 export default function ConfessionCard({ confession }: ConfessionCardProps) {
   const router = useRouter();
   const { 
-    unlockPhoto, 
-    unlockChat, 
+    user,
     isPhotoUnlocked, 
     isChatUnlocked,
+    addUnlock,
+    updateCoins,
+    coins,
+    setShowTopUpModal,
     language 
   } = useApp();
   
@@ -35,23 +39,59 @@ export default function ConfessionCard({ confession }: ConfessionCardProps) {
   const chatUnlocked = isChatUnlocked(confession.id);
 
   const handleUnlockPhoto = async () => {
+    if (!user) {
+      router.push('/auth/login?redirect=/');
+      return;
+    }
+
+    const unlockPrice = confession.unlockPrice || 10;
+    
+    if (coins < unlockPrice) {
+      setShowTopUpModal(true);
+      return;
+    }
+
     setIsUnlocking(true);
     
-    // Simulate a small delay for effect
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const result = await unlockContent(confession.id, 'PHOTO');
     
-    const success = unlockPhoto(confession.id);
-    if (success) {
+    if (result.success && result.data) {
       setPhotoUnlocked(true);
+      addUnlock(confession.id, 'PHOTO');
+      updateCoins(result.data.newBalance);
+    } else if (result.error?.includes('Insufficient')) {
+      setShowTopUpModal(true);
     }
     
     setIsUnlocking(false);
   };
 
   const handleUnlockChat = async () => {
-    const success = unlockChat(confession.id);
-    if (success) {
+    if (!user) {
+      router.push('/auth/login?redirect=/');
+      return;
+    }
+
+    const chatPrice = confession.chatPrice || 5;
+
+    if (chatUnlocked) {
       router.push(`/chat/${confession.id}`);
+      return;
+    }
+
+    if (coins < chatPrice) {
+      setShowTopUpModal(true);
+      return;
+    }
+
+    const result = await unlockContent(confession.id, 'CHAT');
+    
+    if (result.success && result.data) {
+      addUnlock(confession.id, 'CHAT');
+      updateCoins(result.data.newBalance);
+      router.push(`/chat/${confession.id}`);
+    } else if (result.error?.includes('Insufficient')) {
+      setShowTopUpModal(true);
     }
   };
 
