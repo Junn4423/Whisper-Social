@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { AppProvider } from "@/context/SupabaseAppContext";
 import { TopUpModal } from "@/components";
+import { Toaster } from "@/components/ui/Toaster";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -39,9 +40,11 @@ export default function RootLayout({
       >
         <AppProvider>
           <TopUpModal />
+          <Toaster />
           {children}
         </AppProvider>
       </body>
     </html>
   );
 }
+

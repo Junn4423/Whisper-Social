@@ -11,17 +11,17 @@ interface AppContextType {
   profile: Profile | null;
   session: Session | null;
   isLoading: boolean;
-  
+
   // Profile/Coins
   coins: number;
   updateCoins: (newAmount: number) => void;
   refreshProfile: () => Promise<void>;
-  
+
   // Confessions
   confessions: Confession[];
   refreshConfessions: () => Promise<void>;
   isConfessionsLoading: boolean;
-  
+
   // Unlock Status
   unlockedPhotos: string[];
   unlockedChats: string[];
@@ -29,15 +29,15 @@ interface AppContextType {
   isChatUnlocked: (confessionId: string) => boolean;
   addUnlock: (confessionId: string, type: 'PHOTO' | 'CHAT') => void;
   refreshUnlocks: () => Promise<void>;
-  
+
   // Top Up Modal
   showTopUpModal: boolean;
   setShowTopUpModal: (show: boolean) => void;
-  
+
   // Language
   language: Language;
   setLanguage: (lang: Language) => void;
-  
+
   // Auth Actions
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signUp: (email: string, password: string) => Promise<{ error?: string }>;
@@ -57,41 +57,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Confessions State
   const [confessions, setConfessions] = useState<Confession[]>([]);
   const [isConfessionsLoading, setIsConfessionsLoading] = useState(true);
-  
+
   // Unlocks State
   const [unlockedPhotos, setUnlockedPhotos] = useState<string[]>([]);
   const [unlockedChats, setUnlockedChats] = useState<string[]>([]);
-  
+
   // UI State
   const [showTopUpModal, setShowTopUpModal] = useState(false);
-  
+
   // Language State
   const [language, setLanguageState] = useState<Language>('vi');
 
   // =============================================
   // PROFILE FUNCTIONS
   // =============================================
-  
+
   const fetchProfile = useCallback(async (userId: string) => {
     if (!supabase) return null;
-    
+
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
-    
+
     if (error) {
       console.error('Error fetching profile:', error);
       return null;
     }
-    
+
     return data;
   }, []);
 
   const refreshProfile = useCallback(async () => {
     if (!user || !supabase) return;
-    
+
     const profileData = await fetchProfile(user.id);
     if (profileData) {
       setProfile(profileData as Profile);
@@ -108,9 +108,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const refreshConfessions = useCallback(async () => {
     if (!supabase) return;
-    
+
     setIsConfessionsLoading(true);
-    
+
     try {
       const { data, error } = await supabase
         .from('confessions')
@@ -118,12 +118,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(50);
-      
+
       if (error) {
         console.error('Error fetching confessions:', error);
         return;
       }
-      
+
       // Transform to match frontend Confession type
       const transformedConfessions: Confession[] = (data || []).map(conf => ({
         id: conf.id,
@@ -138,7 +138,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         unlockPrice: conf.unlock_price,
         chatPrice: conf.chat_price,
       }));
-      
+
       setConfessions(transformedConfessions);
     } catch (error) {
       console.error('Error in refreshConfessions:', error);
@@ -163,7 +163,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .from('unlocks')
         .select('target_id, target_type')
         .eq('user_id', user.id);
-      
+
       if (error) {
         console.error('Error fetching unlocks:', error);
         return;
@@ -171,7 +171,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       const photos = data?.filter(u => u.target_type === 'PHOTO').map(u => u.target_id) || [];
       const chats = data?.filter(u => u.target_type === 'CHAT').map(u => u.target_id) || [];
-      
+
       setUnlockedPhotos(photos);
       setUnlockedChats(chats);
     } catch (error) {
@@ -201,22 +201,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     if (!supabase) return { error: 'Service not available' };
-    
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    
+
     if (error) {
       return { error: error.message };
     }
-    
+
     return {};
   };
 
   const signUp = async (email: string, password: string) => {
     if (!supabase) return { error: 'Service not available' };
-    
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -224,17 +224,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-    
+
     if (error) {
       return { error: error.message };
     }
-    
+
     return {};
   };
 
   const signOut = async () => {
     if (!supabase) return;
-    
+
     await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
@@ -245,7 +245,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     if (!supabase) return { error: 'Service not available' };
-    
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -255,11 +255,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         },
       },
     });
-    
+
     if (error) {
       return { error: error.message };
     }
-    
+
     return {};
   };
 
@@ -318,17 +318,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       return;
     }
-    
+
     const initAuth = async () => {
       setIsLoading(true);
-      
+
       // Get initial session
       const { data: { session: initialSession } } = await supabase.auth.getSession();
-      
+
       if (initialSession) {
         setSession(initialSession);
         setUser(initialSession.user);
-        
+
         // Fetch profile
         const profileData = await fetchProfile(initialSession.user.id);
         if (profileData) {
@@ -336,7 +336,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           await syncProfileFromUser(initialSession.user);
         }
       }
-      
+
       setIsLoading(false);
     };
 
@@ -347,7 +347,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       async (event, newSession) => {
         setSession(newSession);
         setUser(newSession?.user || null);
-        
+
         if (newSession?.user) {
           const profileData = await fetchProfile(newSession.user.id);
           if (profileData) {
@@ -363,7 +363,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [fetchProfile]);
+  }, [fetchProfile, syncProfileFromUser]);
 
   // Load language preference
   useEffect(() => {
@@ -386,7 +386,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Subscribe to realtime confessions updates
   useEffect(() => {
     if (!supabase) return;
-    
+
     const channel = supabase
       .channel('public:confessions')
       .on(
@@ -410,7 +410,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             unlockPrice: newConf.unlock_price,
             chatPrice: newConf.chat_price,
           };
-          
+
           setConfessions(prev => [transformed, ...prev]);
         }
       )
@@ -456,17 +456,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     profile,
     session,
     isLoading,
-    
+
     // Profile/Coins
     coins: profile?.coins || 0,
     updateCoins,
     refreshProfile,
-    
+
     // Confessions
     confessions,
     refreshConfessions,
     isConfessionsLoading,
-    
+
     // Unlocks
     unlockedPhotos,
     unlockedChats,
@@ -474,15 +474,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isChatUnlocked,
     addUnlock,
     refreshUnlocks,
-    
+
     // UI
     showTopUpModal,
     setShowTopUpModal,
-    
+
     // Language
     language,
     setLanguage,
-    
+
     // Auth Actions
     signIn,
     signUp,

@@ -22,6 +22,21 @@ export type TransactionType =
 
 export type Gender = 'Nam' | 'Nữ' | 'Khác';
 
+// MODULE 3: Report types for Trust & Safety
+export type ReportReason =
+  | 'OFFENSIVE_CONTENT'
+  | 'SCAM'
+  | 'EXPLICIT_IMAGE'
+  | 'HARASSMENT'
+  | 'SPAM'
+  | 'OTHER';
+
+export type ReportStatus =
+  | 'PENDING'
+  | 'REVIEWING'
+  | 'RESOLVED'
+  | 'DISMISSED';
+
 export interface Database {
   public: {
     Tables: {
@@ -297,6 +312,101 @@ export interface Database {
           }
         ];
       };
+      // MODULE 3: Reports table for Trust & Safety
+      reports: {
+        Row: {
+          id: string;
+          reporter_id: string;
+          target_id: string;
+          reason: ReportReason;
+          description: string | null;
+          status: ReportStatus;
+          admin_notes: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          reporter_id: string;
+          target_id: string;
+          reason: ReportReason;
+          description?: string | null;
+          status?: ReportStatus;
+          admin_notes?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          reporter_id?: string;
+          target_id?: string;
+          reason?: ReportReason;
+          description?: string | null;
+          status?: ReportStatus;
+          admin_notes?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reports_reporter_id_fkey";
+            columns: ["reporter_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reports_target_id_fkey";
+            columns: ["target_id"];
+            isOneToOne: false;
+            referencedRelation: "confessions";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      // MODULE 3: Hidden confessions for client-side hiding after report
+      hidden_confessions: {
+        Row: {
+          id: string;
+          user_id: string;
+          confession_id: string;
+          hidden_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          confession_id: string;
+          hidden_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          confession_id?: string;
+          hidden_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "hidden_confessions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "hidden_confessions_confession_id_fkey";
+            columns: ["confession_id"];
+            isOneToOne: false;
+            referencedRelation: "confessions";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -325,6 +435,13 @@ export interface Database {
         };
         Returns: number;
       };
+      add_coins: {
+        Args: {
+          p_user_id: string;
+          p_amount: number;
+        };
+        Returns: Json;
+      };
     };
     Enums: {
       unlock_type: UnlockType;
@@ -341,69 +458,69 @@ type PublicSchema = Database[Extract<keyof Database, "public">];
 
 export type Tables<
   PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
-    | { schema: keyof Database },
+  | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+  | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never = never
+  ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+    Database[PublicTableNameOrOptions["schema"]]["Views"])
+  : never = never
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+    Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R;
     }
-    ? R
-    : never
+  ? R
+  : never
   : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-      PublicSchema["Views"])
+    PublicSchema["Views"])
   ? (PublicSchema["Tables"] &
-      PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+    PublicSchema["Views"])[PublicTableNameOrOptions] extends {
       Row: infer R;
     }
-    ? R
-    : never
+  ? R
+  : never
   : never;
 
 export type TablesInsert<
   PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
-    | { schema: keyof Database },
+  | keyof PublicSchema["Tables"]
+  | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never
+  ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  : never = never
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I;
-    }
-    ? I
-    : never
+    Insert: infer I;
+  }
+  ? I
+  : never
   : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
   ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-      Insert: infer I;
-    }
-    ? I
-    : never
+    Insert: infer I;
+  }
+  ? I
+  : never
   : never;
 
 export type TablesUpdate<
   PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
-    | { schema: keyof Database },
+  | keyof PublicSchema["Tables"]
+  | { schema: keyof Database },
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never
+  ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  : never = never
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U;
-    }
-    ? U
-    : never
+    Update: infer U;
+  }
+  ? U
+  : never
   : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
   ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-      Update: infer U;
-    }
-    ? U
-    : never
+    Update: infer U;
+  }
+  ? U
+  : never
   : never;
 
 // Convenience types for use in components

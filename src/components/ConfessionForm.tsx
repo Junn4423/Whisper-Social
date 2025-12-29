@@ -2,24 +2,28 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { useApp } from '@/context/SupabaseAppContext';
 import { createConfession } from '@/actions/confessionActions';
 import { t } from '@/lib/translations';
-import { 
-  PenSquare, 
-  Image as ImageIcon, 
-  User, 
+import { PriceSlider } from '@/components/ui/PriceSlider';
+import {
+  PenSquare,
+  Image as ImageIcon,
+  User,
   Calendar,
   Eye,
   EyeOff,
   Sparkles,
-  Check
+  Check,
+  Coins,
+  MessageCircle
 } from 'lucide-react';
 
 export default function ConfessionForm() {
   const router = useRouter();
   const { user, language, refreshConfessions } = useApp();
-  
+
   const [text, setText] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [gender, setGender] = useState<'Nam' | 'Nữ' | 'Khác'>('Khác');
@@ -27,6 +31,11 @@ export default function ConfessionForm() {
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // MODULE 1: Dynamic Pricing States
+  const [unlockPrice, setUnlockPrice] = useState(10);
+  const [chatPrice, setChatPrice] = useState(5);
+  const [showPricing, setShowPricing] = useState(false);
 
   const defaultImages = [
     'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=400&fit=crop',
@@ -58,6 +67,9 @@ export default function ConfessionForm() {
         gender,
         age,
         isAnonymous,
+        // MODULE 1: Pass dynamic pricing
+        unlockPrice,
+        chatPrice,
       });
 
       if (result.success) {
@@ -65,6 +77,18 @@ export default function ConfessionForm() {
         refreshConfessions().catch((err) => {
           console.error('Failed to refresh confessions:', err);
         });
+
+        // Show success toast
+        toast.success(
+          language === 'vi'
+            ? '🎉 Confession đã được đăng thành công!'
+            : '🎉 Confession posted successfully!',
+          {
+            description: language === 'vi'
+              ? `Giá mở khóa: ${unlockPrice} xu | Giá chat: ${chatPrice} xu`
+              : `Unlock: ${unlockPrice} coins | Chat: ${chatPrice} coins`,
+          }
+        );
 
         setShowSuccess(true);
         setText('');
@@ -76,10 +100,12 @@ export default function ConfessionForm() {
         }, 1000);
       } else {
         setError(result.error || 'Failed to create confession');
+        toast.error(result.error || 'Failed to create confession');
       }
     } catch (err) {
       console.error('Error submitting confession:', err);
       setError('Có lỗi xảy ra, vui lòng thử lại / Something went wrong');
+      toast.error('Có lỗi xảy ra, vui lòng thử lại');
     } finally {
       setIsSubmitting(false);
     }
@@ -114,8 +140,8 @@ export default function ConfessionForm() {
           {t('createConfession', language)}
         </h1>
         <p className="text-gray-400">
-          {language === 'vi' 
-            ? 'Chia sẻ những điều bạn chưa từng nói với ai...' 
+          {language === 'vi'
+            ? 'Chia sẻ những điều bạn chưa từng nói với ai...'
             : 'Share what you\'ve never told anyone...'}
         </p>
       </div>
@@ -156,8 +182,8 @@ export default function ConfessionForm() {
             className="w-full px-4 py-3 rounded-xl bg-dark-100/50 border border-dark-200 focus:border-neon-purple/50 focus:outline-none focus:ring-2 focus:ring-neon-purple/20 text-white placeholder-gray-500 transition-all"
           />
           <p className="text-xs text-gray-500 mt-1">
-            {language === 'vi' 
-              ? 'Để trống để sử dụng ảnh mặc định' 
+            {language === 'vi'
+              ? 'Để trống để sử dụng ảnh mặc định'
               : 'Leave empty to use default image'}
           </p>
         </div>
@@ -176,15 +202,14 @@ export default function ConfessionForm() {
                   key={g}
                   type="button"
                   onClick={() => setGender(g)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    gender === g
-                      ? g === 'Nữ' 
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${gender === g
+                      ? g === 'Nữ'
                         ? 'bg-pink-500/30 border-pink-500 text-pink-400 border'
                         : g === 'Nam'
                           ? 'bg-blue-500/30 border-blue-500 text-blue-400 border'
                           : 'bg-purple-500/30 border-purple-500 text-purple-400 border'
                       : 'bg-dark-200/50 border border-dark-200 text-gray-400 hover:border-gray-500'
-                  }`}
+                    }`}
                 >
                   {g === 'Nam' ? t('male', language) : g === 'Nữ' ? t('female', language) : t('other', language)}
                 </button>
@@ -209,6 +234,99 @@ export default function ConfessionForm() {
           </div>
         </div>
 
+        {/* ========================================== */}
+        {/* MODULE 1: DYNAMIC PRICING SECTION */}
+        {/* ========================================== */}
+        <div className="space-y-4">
+          {/* Pricing Toggle Header */}
+          <button
+            type="button"
+            onClick={() => setShowPricing(!showPricing)}
+            className="w-full flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-gold/10 to-gold-dark/10 border border-gold/30 hover:border-gold/50 transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-gold/20">
+                <Coins className="w-5 h-5 text-gold" />
+              </div>
+              <div className="text-left">
+                <p className="font-medium text-white">
+                  {language === 'vi' ? '💰 Định giá bài viết' : '💰 Set Your Prices'}
+                </p>
+                <p className="text-xs text-gray-400">
+                  {language === 'vi'
+                    ? `Mở khóa: ${unlockPrice} xu | Chat: ${chatPrice} xu`
+                    : `Unlock: ${unlockPrice} coins | Chat: ${chatPrice} coins`}
+                </p>
+              </div>
+            </div>
+            <div className={`text-gray-400 transition-transform duration-300 ${showPricing ? 'rotate-180' : ''}`}>
+              ▼
+            </div>
+          </button>
+
+          {/* Pricing Sliders (Collapsible) */}
+          {showPricing && (
+            <div className="space-y-6 p-5 rounded-xl bg-dark-100/50 border border-dark-200 animate-in slide-in-from-top-2 duration-300">
+              {/* Unlock Price Slider */}
+              <PriceSlider
+                label={language === 'vi' ? 'Giá mở khóa ảnh' : 'Photo Unlock Price'}
+                value={unlockPrice}
+                onChange={setUnlockPrice}
+                min={0}
+                max={100}
+                step={5}
+                icon={<Eye className="w-4 h-4" />}
+                colorTheme="gold"
+                hint={language === 'vi'
+                  ? '💡 Giá thấp (0-20 xu) giúp nhiều người mở khóa hơn. Giá cao (50+ xu) cho nội dung độc quyền.'
+                  : '💡 Low prices (0-20 coins) attract more unlocks. High prices (50+ coins) for exclusive content.'}
+              />
+
+              {/* Chat Price Slider */}
+              <PriceSlider
+                label={language === 'vi' ? 'Giá mở khóa chat' : 'Chat Unlock Price'}
+                value={chatPrice}
+                onChange={setChatPrice}
+                min={0}
+                max={50}
+                step={5}
+                icon={<MessageCircle className="w-4 h-4" />}
+                colorTheme="pink"
+                hint={language === 'vi'
+                  ? '💬 Đặt giá 0 để cho phép chat miễn phí. Giá cao hơn lọc bớt người chat nghiêm túc.'
+                  : '💬 Set to 0 for free chat. Higher prices filter for serious conversations.'}
+              />
+
+              {/* Pricing Preview */}
+              <div className="flex items-center justify-center gap-4 p-3 rounded-lg bg-dark-200/50">
+                <div className="text-center">
+                  <p className="text-xs text-gray-500 mb-1">
+                    {language === 'vi' ? 'Bạn nhận' : 'You earn'}
+                  </p>
+                  <p className="text-lg font-bold text-neon-purple">
+                    {Math.floor(unlockPrice * 0.5)} xu
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {language === 'vi' ? 'mỗi lần mở khóa' : 'per unlock'}
+                  </p>
+                </div>
+                <div className="w-px h-10 bg-dark-200" />
+                <div className="text-center">
+                  <p className="text-xs text-gray-500 mb-1">
+                    {language === 'vi' ? 'Bạn nhận' : 'You earn'}
+                  </p>
+                  <p className="text-lg font-bold text-neon-pink">
+                    {Math.floor(chatPrice * 0.5)} xu
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {language === 'vi' ? 'mỗi lần chat' : 'per chat'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Error Message */}
         {error && (
           <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30">
@@ -227,8 +345,8 @@ export default function ConfessionForm() {
             <div>
               <p className="font-medium text-white">{t('anonymousMode', language)}</p>
               <p className="text-xs text-gray-500">
-                {language === 'vi' 
-                  ? 'Ẩn danh tính của bạn' 
+                {language === 'vi'
+                  ? 'Ẩn danh tính của bạn'
                   : 'Hide your identity'}
               </p>
             </div>
@@ -236,14 +354,12 @@ export default function ConfessionForm() {
           <button
             type="button"
             onClick={() => setIsAnonymous(!isAnonymous)}
-            className={`relative w-14 h-7 rounded-full transition-colors ${
-              isAnonymous ? 'bg-neon-purple' : 'bg-dark-200'
-            }`}
+            className={`relative w-14 h-7 rounded-full transition-colors ${isAnonymous ? 'bg-neon-purple' : 'bg-dark-200'
+              }`}
           >
             <div
-              className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-transform ${
-                isAnonymous ? 'left-8' : 'left-1'
-              }`}
+              className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-transform ${isAnonymous ? 'left-8' : 'left-1'
+                }`}
             />
           </button>
         </div>
@@ -252,11 +368,10 @@ export default function ConfessionForm() {
         <button
           type="submit"
           disabled={!text.trim() || isSubmitting}
-          className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-lg transition-all duration-300 ${
-            text.trim() && !isSubmitting
+          className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-lg transition-all duration-300 ${text.trim() && !isSubmitting
               ? 'bg-gradient-neon text-white hover:shadow-neon hover:scale-[1.02] active:scale-[0.98]'
               : 'bg-dark-200 text-gray-500 cursor-not-allowed'
-          }`}
+            }`}
         >
           {isSubmitting ? (
             <>

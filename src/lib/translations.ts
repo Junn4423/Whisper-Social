@@ -312,6 +312,114 @@ export const translations: Translations = {
     vi: 'Đăng nhập để mở khóa',
     en: 'Login to unlock',
   },
+
+  // MODULE 1: Dynamic Pricing
+  setPrice: {
+    vi: 'Đặt giá',
+    en: 'Set Price',
+  },
+  unlockPriceLabel: {
+    vi: 'Giá mở khóa ảnh',
+    en: 'Photo Unlock Price',
+  },
+  chatPriceLabel: {
+    vi: 'Giá mở khóa chat',
+    en: 'Chat Unlock Price',
+  },
+  pricingHint: {
+    vi: 'Giá thấp giúp nhiều người mở khóa hơn',
+    en: 'Lower prices attract more unlocks',
+  },
+  youEarn: {
+    vi: 'Bạn nhận',
+    en: 'You earn',
+  },
+  perUnlock: {
+    vi: 'mỗi lần mở khóa',
+    en: 'per unlock',
+  },
+
+  // MODULE 2: Payment
+  processingPayment: {
+    vi: 'Đang xử lý thanh toán...',
+    en: 'Processing payment...',
+  },
+  paymentSuccess: {
+    vi: 'Nạp xu thành công!',
+    en: 'Top up successful!',
+  },
+  paymentFailed: {
+    vi: 'Giao dịch thất bại',
+    en: 'Transaction failed',
+  },
+  tryAgain: {
+    vi: 'Thử lại',
+    en: 'Try Again',
+  },
+  testError: {
+    vi: 'Test Lỗi',
+    en: 'Test Error',
+  },
+
+  // MODULE 3: Report
+  reportViolation: {
+    vi: 'Báo cáo vi phạm',
+    en: 'Report Violation',
+  },
+  offensiveContent: {
+    vi: 'Nội dung thô tục',
+    en: 'Offensive content',
+  },
+  scam: {
+    vi: 'Lừa đảo',
+    en: 'Scam',
+  },
+  explicitImage: {
+    vi: 'Ảnh nhạy cảm không che',
+    en: 'Explicit uncensored image',
+  },
+  harassment: {
+    vi: 'Quấy rối',
+    en: 'Harassment',
+  },
+  spam: {
+    vi: 'Spam',
+    en: 'Spam',
+  },
+  otherReason: {
+    vi: 'Khác',
+    en: 'Other',
+  },
+  submitReport: {
+    vi: 'Gửi báo cáo',
+    en: 'Submit Report',
+  },
+  reportSubmitted: {
+    vi: 'Báo cáo đã được gửi',
+    en: 'Report submitted',
+  },
+  hidePost: {
+    vi: 'Ẩn bài viết',
+    en: 'Hide post',
+  },
+  postHidden: {
+    vi: 'Đã ẩn bài viết khỏi feed',
+    en: 'Post hidden from feed',
+  },
+
+  // MODULE 4: UI States
+  refresh: {
+    vi: 'Làm mới',
+    en: 'Refresh',
+  },
+  postsHidden: {
+    vi: 'bài viết đã ẩn',
+    en: 'posts hidden',
+  },
+  beFirstToShare: {
+    vi: 'Hãy là người đầu tiên chia sẻ!',
+    en: 'Be the first to share!',
+  },
 };
 
 export const t = (key: string, lang: 'vi' | 'en'): string => {
